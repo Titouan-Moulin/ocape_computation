@@ -8,9 +8,9 @@ import gsw as gsw
 import cartopy.crs as ccrs
 
 
-#(abs_sal_3d, CT_3d, depth_AX, longitude_AX, latitude_AX) = AOf.opening_annual_Levitus94()
-(abs_sal_3d, CT_3d, depth_AX, longitude_AX, latitude_AX) = AOf.opening_monthly_Levitus94(month='Sep')
-#(abs_sal_3d, CT_3d, depth_AX, longitude_AX, latitude_AX) = AOf.opening_HR_WOCE(month='Jan', type_data='PYC')
+#(abs_sal_3d, CT_3d, depth_AX, longitude_AX, latitude_AX) = AOf.opening_annual_Levitus94(dtry=r'/ANNUAL_LEVITUS', file_sal=r'/anual_sal.nc', file_temp=r'/anual_pottemp.nc')
+(abs_sal_3d, CT_3d, depth_AX, longitude_AX, latitude_AX) = AOf.opening_monthly_Levitus94(month='Jan',dtry=r'/MONTHLY_LEVITUS', file_sal=r'/Salinity.nc', file_temp=r'/potential_temperature.nc')
+#(abs_sal_3d, CT_3d, depth_AX, longitude_AX, latitude_AX) = AOf.opening_HR_WOCE(month='Jan', type_data='PYC', dtry=r'/HR_WOCE')
 ##Parameters
 
 ##
