@@ -9,13 +9,25 @@ from matplotlib import cm
 import matplotlib.colors as colors
 
 
-def opening_HR_WOCE(month='Jan', type_data='PYC'):
+def opening_HR_WOCE(month='Jan', type_data='PYC', dtry=r'/HR_WOCE'):
+    '''
+    Parameters
+    ----------
+    > month : month to compute, first three letters starting with a capital letter, see MONTHS below for value;
+    > type_data : select data to compute 'BAR' or 'PYC', usefull if all 24 files are in the same directory;
+    > dtry : directory name where the files are stored;
+    Returns
+    -------
+    >> SA : 3d-array(depth, latitude, longitude), Absolute Salinity, in fact reference salinity but used as SA;
+    >> CT : 3d-array(depth, latitude, longitude), Conservative temperature;
+    >> depth : 1d-array(), depth;
+    >> lon : 1d-array(), longitude;
+    >> lat : 1d-array(), latitude
+    '''
     MONTHS=[['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']]
     month_index= MONTHS[0].index(month)
     file_num=MONTHS[1][month_index]
     file_name=r'/WAGHC_'+ type_data + '_' + file_num + '_UHAM-ICDC_v1_0_1.nc'
-    #dir=r'/home/users/di223124'
-    dtry=r'/storage/silver/metstudent/msc/users_2024/di223124/HR_WOCE'
     
     month_data=nc.Dataset(dtry+file_name)
     
@@ -26,12 +38,13 @@ def opening_HR_WOCE(month='Jan', type_data='PYC'):
     ##Pressure
     lat_3d, depth_3d, long_3d = np.meshgrid(lat, depth, lon)
     pressure = gsw.conversions.p_from_z(-depth_3d, lat_3d, geo_strf_dyn_height=0, sea_surface_geopotential=0)
-    print('press in Of', pressure[:,0,0])
+    #print('press in Of', pressure[:,0,0])
     
     ##Salinity
     salinity = np.array(month_data.variables['salinity'][0])
     salinity[salinity<-8.]=np.nan
-    SA=gsw.conversions.SA_from_SP(salinity, pressure, long_3d, lat_3d) # SR ?
+    #SA=gsw.conversions.SA_from_SP(salinity, pressure, long_3d, lat_3d) # This two lines can be change to have SA, but no significant impact on the results
+    SA=gsw.conversions.SR_from_SP(salinity)
     
     ##Conservative temperature
     temperature=np.array(month_data.variables['temperature'][0])
@@ -41,15 +54,29 @@ def opening_HR_WOCE(month='Jan', type_data='PYC'):
     return (SA, CT, depth, lon, lat)    
     
     
-def opening_annual_Levitus94():
+def opening_annual_Levitus94(dtry=r'/ANNUAL_LEVITUS', file_sal=r'/anual_sal.nc', file_temp=r'/anual_pottemp.nc'):
+    '''
+    Parameters
+    ----------
+    > dtry : directory name where the files are stored;
+    > file_sal : name of the salinity file in dtry;
+    > file_temp : name of the salinity file in dtry;
+    Returns
+    -------
+    >> abs_sal : 3d-array(depth, latitude, longitude), Absolute Salinity, in fact reference salinity but used as SA;
+    >> CT_3d : 3d-array(depth, latitude, longitude), Conservative temperature;
+    >> depth_AX : 1d-array(), depth;
+    >> long_AX : 1d-array(), longitude;
+    >> lat_AX : 1d-array(), latitude
+    '''
     ##Salinity
-    salinity = nc.Dataset(r"C:\Users\titou\Essai\Biblio\Thermobaricity_Projects\Python_code\everything_else\LEVITUS_annual_data\anual_sal.nc")
+    salinity = nc.Dataset(dtry + file_sal)
     #print("salinity")  #units: psu (practical salinity units)  #i think its practical salinity ## Make sure of that
     prac_salinity_3d=np.array(salinity.variables['sal'][:])
     abs_sal_3d=gsw.conversions.SR_from_SP(prac_salinity_3d)
 
     ##Conservative temperature
-    pot_temp= nc.Dataset(r"C:\Users\titou\Essai\Biblio\Thermobaricity_Projects\Python_code\everything_else\LEVITUS_annual_data\anual_pottemp.nc")
+    pot_temp= nc.Dataset(dtry + file_temp)
     #print("potential temperature")  #units: celcius  #its in pottential temperature
     pot_temp_3d=np.array(pot_temp.variables['theta'][:])
     CT_3d=gsw.conversions.CT_from_pt(abs_sal_3d, pot_temp_3d)
@@ -61,18 +88,33 @@ def opening_annual_Levitus94():
 
     return (abs_sal_3d, CT_3d, depth_AX, long_AX, lat_AX)
     
-def opening_monthly_Levitus94(month='Jan'):
+def opening_monthly_Levitus94(month='Jan',dtry=r'/MONTHLY_LEVITUS', file_sal=r'/Salinity.nc', file_temp=r'/potential_temperature.nc'):
+    '''
+    Parameters
+    ----------
+    > month : month to compute, first three letters starting with a capital letter, see MONTHS below for value;
+    > dtry : directory name where the files are stored;
+    > file_sal : name of the salinity file in dtry;
+    > file_temp : name of the salinity file in dtry;
+    Returns
+    -------
+    >> abs_sal : 3d-array(depth, latitude, longitude), Absolute Salinity, in fact reference salinity but used as SA;
+    >> CT_3d : 3d-array(depth, latitude, longitude), Conservative temperature;
+    >> depth_AX : 1d-array(), depth;
+    >> long_AX : 1d-array(), longitude;
+    >> lat_AX : 1d-array(), latitude
+    '''
     MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     month_index= MONTHS.index(month)
     
     ##Salinity
-    salinity = nc.Dataset(r"C:\Users\titou\Essai\Biblio\Thermobaricity_Projects\Python_code\everything_else\LEVITUS_monthly_data\Salinity.nc")
+    salinity = nc.Dataset(dtry + file_sal)
     salinity_4d=np.array(salinity.variables['sal'][:])
     salinity_3d=salinity_4d[month_index]
     abs_sal_3d=gsw.conversions.SR_from_SP(salinity_3d)
 
     ##Conservative temperature
-    potential_temperature = nc.Dataset(r"C:\Users\titou\Essai\Biblio\Thermobaricity_Projects\Python_code\everything_else\LEVITUS_monthly_data\potential_temperature.nc")
+    potential_temperature = nc.Dataset(dtry + file_temp)
     #print("potential_temperature") #units: celcius
     potential_temperature_4d=np.array(potential_temperature.variables['theta'][:])
     potential_temperature_3d=potential_temperature_4d[month_index]
