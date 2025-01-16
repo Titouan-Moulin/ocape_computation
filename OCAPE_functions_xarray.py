@@ -41,7 +41,7 @@ def compute_rpe_single_ignore_nan(cost_matrix_2d):
     padded_col_ind[original_row_indices] = original_col_indices
 
     # Sum the costs from the submatrix
-    cost_sum = submatrix[row_ind, col_ind].sum()
+    cost_sum = submatrix[row_ind, col_ind].sum() / len(padded_row_ind)
     return cost_sum, padded_row_ind, padded_col_ind
 
 
